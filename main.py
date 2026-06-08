@@ -8,6 +8,7 @@ import threading
 import tkinter as tk
 import ctypes
 from queue import Queue
+import time
 
 ctypes.windll.user32.SetProcessDPIAware()
 
@@ -22,6 +23,15 @@ class ScreenshotTool:
         self.select_count = 0
         self.setup_hotkey()
         self.process_tasks()
+        threading.Thread(target=self.health_check, daemon=True).start()
+
+    def health_check(self):
+        while True:
+            time.sleep(10)
+            with keyboard._pressed_events_lock:
+                if keyboard._pressed_events:
+                    print("Найдены залипшие клавиши, очищаем...")
+                    keyboard._pressed_events.clear()
 
     def load_config(self):
         if not os.path.exists(self.config_file):
