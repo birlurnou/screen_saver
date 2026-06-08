@@ -132,7 +132,7 @@ class ScreenshotTool:
         self.selection_win.configure(bg='gray')
         self.selection_win.attributes('-topmost', True)
 
-        canvas = tk.Canvas(self.selection_win, cursor='cross', bg='gray', highlightthickness=0)
+        canvas = tk.Canvas(self.selection_win, cursor='tcross', bg='gray', highlightthickness=0)
         canvas.pack(fill=tk.BOTH, expand=True)
 
         rect = None
@@ -170,6 +170,7 @@ class ScreenshotTool:
         try:
             cropped = ImageGrab.grab().crop((x1, y1, x2, y2))
             self.save_screenshot(cropped)
+            self.select_count = 0
         except Exception as e:
             print(f'Ошибка: {e}')
 
