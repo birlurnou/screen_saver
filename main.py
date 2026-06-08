@@ -112,6 +112,12 @@ class ScreenshotTool:
             self.save_screenshot(image)
 
     def select_area(self):
+
+        def wait_for_esc():
+            keyboard.wait('esc')
+            self.selection_win.destroy()
+        threading.Thread(target=wait_for_esc, daemon=True).start()
+
         if self.root is None:
             self.root = tk.Tk()
             self.root.withdraw()
@@ -155,7 +161,6 @@ class ScreenshotTool:
         canvas.bind('<ButtonPress-1>', on_mouse_down)
         canvas.bind('<B1-Motion>', on_mouse_move)
         canvas.bind('<ButtonRelease-1>', on_mouse_up)
-        self.selection_win.bind('<Escape>', lambda e: self.selection_win.destroy())
 
     def capture_area(self, x1, y1, x2, y2):
         try:
@@ -165,11 +170,9 @@ class ScreenshotTool:
             print(f'Ошибка: {e}')
 
     def take_screenshot(self):
-        # Запускаем в главном потоке через очередь
         self.task_queue.put(self.select_area)
 
     def process_tasks(self):
-        # Обрабатываем задачи из очереди в главном потоке
         try:
             while not self.task_queue.empty():
                 task = self.task_queue.get_nowait()
@@ -188,23 +191,12 @@ class ScreenshotTool:
 def main():
     tool = ScreenshotTool()
 
-    # Создаем root окно
     tool.root = tk.Tk()
     tool.root.withdraw()
-
-    # Запускаем обработку очереди
     tool.process_tasks()
 
     print('Программа запущена. Нажмите Esc для выхода.')
 
-    # Запускаем проверку клавиши Esc в отдельном потоке
-    def wait_for_esc():
-        keyboard.wait('esc')
-        tool.root.quit()
-
-    threading.Thread(target=wait_for_esc, daemon=True).start()
-
-    # Запускаем главный цикл tkinter
     tool.root.mainloop()
 
 
