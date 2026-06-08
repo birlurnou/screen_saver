@@ -3,7 +3,7 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-screenshot_config.ini
+*.ini
 
 # C extensions
 *.so
