@@ -14,7 +14,7 @@ ctypes.windll.user32.SetProcessDPIAware()
 
 class ScreenshotTool:
     def __init__(self):
-        self.config_file = 'screenshot_config.ini'
+        self.config_file = 'config.ini'
         self.config = configparser.ConfigParser()
         self.load_config()
         self.task_queue = Queue()
@@ -38,9 +38,11 @@ class ScreenshotTool:
         self.quality = self.config.getint('Quality', 'quality', fallback=95)
         self.compression = self.config.getint('Quality', 'compression', fallback=6)
 
-        self.overlay_alpha = self.config.getfloat('Appearance', 'overlay_alpha', fallback=0.3)
-        self.selection_color = self.config.get('Appearance', 'selection_color', fallback='red')
-        self.selection_width = self.config.getint('Appearance', 'selection_width', fallback=2)
+        self.overlay_alpha = self.config.getfloat('Appearance', 'overlay_alpha', fallback=0.2)
+        self.overlay_color = self.config.get('Appearance', 'overlay_color', fallback='black')
+        self.selection_color = self.config.get('Appearance', 'selection_color', fallback='black')
+        self.selection_width = self.config.getint('Appearance', 'selection_width', fallback=1)
+        self.cursor_type = self.config.get('Appearance', 'cursor_type', fallback='tcross')
 
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
@@ -60,9 +62,11 @@ class ScreenshotTool:
             'compression': '6'
         }
         self.config['Appearance'] = {
-            'overlay_alpha': '0.3',
-            'selection_color': 'red',
-            'selection_width': '2'
+            'overlay_alpha': '0.2',
+            'overlay_color': 'black',
+            'selection_color': 'black',
+            'selection_width': '1',
+            'cursor_type': 'tcross'
         }
 
         with open(self.config_file, 'w', encoding='utf-8') as f:
@@ -129,10 +133,10 @@ class ScreenshotTool:
         self.selection_win = tk.Toplevel(self.root)
         self.selection_win.attributes('-fullscreen', True)
         self.selection_win.attributes('-alpha', self.overlay_alpha)
-        self.selection_win.configure(bg='gray')
+        self.selection_win.configure(bg=self.overlay_color)
         self.selection_win.attributes('-topmost', True)
 
-        canvas = tk.Canvas(self.selection_win, cursor='tcross', bg='gray', highlightthickness=0)
+        canvas = tk.Canvas(self.selection_win, cursor='tcross', bg=self.overlay_color, highlightthickness=0)
         canvas.pack(fill=tk.BOTH, expand=True)
 
         rect = None
