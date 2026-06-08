@@ -19,6 +19,7 @@ class ScreenshotTool:
         self.load_config()
         self.task_queue = Queue()
         self.root = None
+        self.select_count = 0
         self.setup_hotkey()
         self.process_tasks()
 
@@ -116,11 +117,14 @@ class ScreenshotTool:
         def wait_for_esc():
             keyboard.wait('esc')
             self.selection_win.destroy()
+            self.select_count = 0
+
         threading.Thread(target=wait_for_esc, daemon=True).start()
 
         if self.root is None:
             self.root = tk.Tk()
             self.root.withdraw()
+            self.select_count = 1
 
         self.selection_win = tk.Toplevel(self.root)
         self.selection_win.attributes('-fullscreen', True)
@@ -170,7 +174,9 @@ class ScreenshotTool:
             print(f'Ошибка: {e}')
 
     def take_screenshot(self):
-        self.task_queue.put(self.select_area)
+        if self.select_count == 0:
+            self.task_queue.put(self.select_area)
+            self.select_count += 1
 
     def process_tasks(self):
         try:
