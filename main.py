@@ -1,6 +1,7 @@
 import os
 import sys
 import configparser
+import time
 from datetime import datetime
 from PIL import Image, ImageGrab
 from pynput import keyboard
@@ -19,32 +20,31 @@ class ScreenshotTool:
         self.setup_listener()
 
     def load_config(self):
-        """Загрузка всех настроек из конфига"""
+        # загрузка всех настроек из конфига
         if not os.path.exists(self.config_file):
             self.create_default_config()
 
         self.config.read(self.config_file, encoding='utf-8')
 
-        # Общие настройки
+        # общие настройки
         self.screenshot_path = self.config.get('Settings', 'save_path', fallback=self.get_default_path())
         self.behavior = self.config.get('Settings', 'behavior', fallback='save_file')
 
-        # Настройки качества
+        # настройки качества
         self.image_format = self.config.get('Quality', 'format', fallback='PNG')
         self.quality = self.config.getint('Quality', 'quality', fallback=95)
         self.compression = self.config.getint('Quality', 'compression', fallback=6)
 
-        # Настройки внешнего вида
+        # настройки внешнего вида
         self.overlay_alpha = self.config.getfloat('Appearance', 'overlay_alpha', fallback=0.3)
         self.selection_color = self.config.get('Appearance', 'selection_color', fallback='red')
         self.selection_width = self.config.getint('Appearance', 'selection_width', fallback=2)
 
-        # Создаём папку для скриншотов
+        # создаём папку для скриншотов
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
 
     def create_default_config(self):
-        """Создание конфига с настройками по умолчанию"""
         self.config['Settings'] = {
             'save_path': self.get_default_path(),
             'behavior': 'save_file'
@@ -64,17 +64,17 @@ class ScreenshotTool:
             self.config.write(f)
 
     def get_default_path(self):
-        """Путь по умолчанию"""
-        return os.path.join(os.path.expanduser("~"), "Documents", "Screenshots")
+        # путь по умолчанию
+        return os.path.join(os.path.expanduser('~'), 'Documents', 'Screenshots')
 
     def get_unique_filename(self):
-        """Генерация уникального имени файла"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+        # генерация уникального имени файла
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]
         ext = 'png' if self.image_format == 'PNG' else 'jpg'
-        return f"screenshot_{timestamp}.{ext}"
+        return f'screenshot_{timestamp}.{ext}'
 
     def save_screenshot(self, image):
-        """Сохранение скриншота"""
+        # сохранение скриншота
         if self.behavior == 'save_file':
             filepath = os.path.join(self.screenshot_path, self.get_unique_filename())
 
@@ -87,13 +87,11 @@ class ScreenshotTool:
                     rgb_image.save(filepath, 'JPEG', quality=self.quality)
                 else:
                     image.save(filepath, 'JPEG', quality=self.quality)
-            print(f"✅ Скриншот сохранён: {filepath}")
         else:
             self.copy_to_clipboard(image)
-            print("✅ Скриншот скопирован в буфер")
 
     def copy_to_clipboard(self, image):
-        """Копирование в буфер обмена"""
+        # копирование в буфер обмена
         try:
             import win32clipboard
             from PIL import ImageWin
@@ -103,11 +101,10 @@ class ScreenshotTool:
             ImageWin.Dib(image).save(win32clipboard)
             win32clipboard.CloseClipboard()
         except ImportError:
-            print("⚠️ Установите pywin32: pip install pywin32")
             self.save_screenshot(image)
 
     def select_area(self):
-        """Выделение области на экране"""
+        # выделение области на экране
         if not hasattr(self, 'root'):
             self.root = tk.Tk()
             self.root.withdraw()
@@ -118,7 +115,7 @@ class ScreenshotTool:
         self.selection_win.configure(bg='gray')
         self.selection_win.attributes('-topmost', True)
 
-        canvas = tk.Canvas(self.selection_win, cursor="cross", bg='gray', highlightthickness=0)
+        canvas = tk.Canvas(self.selection_win, cursor='cross', bg='gray', highlightthickness=0)
         canvas.pack(fill=tk.BOTH, expand=True)
 
         rect = None
@@ -155,12 +152,12 @@ class ScreenshotTool:
         self.selection_win.update()
 
     def capture_area(self, x1, y1, x2, y2):
-        """Захват выделенной области"""
+        # захват выделенной области
         try:
             cropped = ImageGrab.grab().crop((x1, y1, x2, y2))
             self.save_screenshot(cropped)
         except Exception as e:
-            print(f"Ошибка: {e}")
+            print(f'Ошибка: {e}')
 
     def take_screenshot(self):
         threading.Thread(target=self.select_area, daemon=True).start()
@@ -168,7 +165,6 @@ class ScreenshotTool:
     def setup_listener(self):
         def on_press(key):
             if key == keyboard.Key.print_screen:
-                print("📸 Print Screen нажат!")
                 self.take_screenshot()
 
         def run_listener():
@@ -179,8 +175,6 @@ class ScreenshotTool:
 
 
 def main():
-    print("🖥️  Скриншейдер запущен")
-    print("📸 Нажмите Print Screen для скриншота")
 
     tool = ScreenshotTool()
 
@@ -191,5 +185,5 @@ def main():
     tool.root.mainloop()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
