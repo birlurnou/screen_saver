@@ -7,6 +7,7 @@ import keyboard
 import threading
 import tkinter as tk
 import ctypes
+import ctypes.wintypes
 from queue import Queue
 import time
 
@@ -109,8 +110,6 @@ class ScreenshotTool:
                     rgb_image.save(filepath, 'JPEG', quality=self.quality)
                 else:
                     image.save(filepath, 'JPEG', quality=self.quality)
-
-            print(f'Скриншот сохранён: {filepath}')
         if int(self._copy) == 1:
             self.copy_to_clipboard(image)
 
@@ -128,7 +127,6 @@ class ScreenshotTool:
             win32clipboard.EmptyClipboard()
             win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
             win32clipboard.CloseClipboard()
-            print('Скриншот скопирован в буфер обмена')
         except:
             self.save_screenshot(image)
 
@@ -146,7 +144,6 @@ class ScreenshotTool:
             self.root.withdraw()
             self.select_count = 1
 
-        # Виртуальный рабочий стол (все мониторы)
         user32 = ctypes.windll.user32
         virtual_left = user32.GetSystemMetrics(76)
         virtual_top = user32.GetSystemMetrics(77)
@@ -207,10 +204,33 @@ class ScreenshotTool:
 
     def capture_area(self, x1, y1, x2, y2):
         try:
-            # Захватываем ВСЕ экраны, затем вырезаем область
-            full = ImageGrab.grab(all_screens=True)
-            cropped = full.crop((x1, y1, x2, y2))
-            self.save_screenshot(cropped)
+
+            user32 = ctypes.windll.user32
+            gdi32 = ctypes.windll.gdi32
+
+            width = int(abs(x2 - x1))
+            height = int(abs(y2 - y1))
+
+            if width == 0 or height == 0:
+                return
+
+            hdcScreen = user32.GetDC(None)
+            hdcMem = gdi32.CreateCompatibleDC(hdcScreen)
+            hbm = gdi32.CreateCompatibleBitmap(hdcScreen, width, height)
+            gdi32.SelectObject(hdcMem, hbm)
+
+            gdi32.BitBlt(hdcMem, 0, 0, width, height, hdcScreen, int(x1), int(y1), 0x00CC0020)
+
+            bmp = ctypes.create_string_buffer(width * height * 4)
+            gdi32.GetBitmapBits(hbm, width * height * 4, bmp)
+
+            img = Image.frombuffer('RGBA', (width, height), bmp, 'raw', 'BGRA', 0, 1).convert('RGB')
+
+            gdi32.DeleteObject(hbm)
+            gdi32.DeleteDC(hdcMem)
+            user32.ReleaseDC(None, hdcScreen)
+
+            self.save_screenshot(img)
         except Exception as e:
             print(f'Ошибка захвата: {e}')
         finally:
@@ -234,7 +254,6 @@ class ScreenshotTool:
 
     def setup_hotkey(self):
         keyboard.add_hotkey(self.hotkey, self.take_screenshot)
-        print(f'Горячая клавиша: {self.hotkey}')
 
 
 def main():
@@ -243,9 +262,6 @@ def main():
     tool.root = tk.Tk()
     tool.root.withdraw()
     tool.process_tasks()
-
-    print('Программа запущена. Нажмите Esc для выхода.')
-
     tool.root.mainloop()
 
 
