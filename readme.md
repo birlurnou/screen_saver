@@ -22,6 +22,7 @@ compression = 6
 overlay_alpha = 0.2
 overlay_color = black
 selection_color = black
+selection_fill_color = white
 selection_width = 1
 cursor_type = tcross
 ```
