@@ -51,6 +51,7 @@ class ScreenshotTool:
         self.overlay_alpha = self.config.getfloat('Appearance', 'overlay_alpha', fallback=0.2)
         self.overlay_color = self.config.get('Appearance', 'overlay_color', fallback='black')
         self.selection_color = self.config.get('Appearance', 'selection_color', fallback='black')
+        self.selection_fill_color = self.config.get('Appearance', 'selection_fill_color', fallback='white')
         self.selection_width = self.config.getint('Appearance', 'selection_width', fallback=1)
         self.cursor_type = self.config.get('Appearance', 'cursor_type', fallback='tcross')
 
@@ -72,9 +73,10 @@ class ScreenshotTool:
             'compression': '6'
         }
         self.config['Appearance'] = {
-            'overlay_alpha': '0.2',
+            'overlay_alpha': '0.25',
             'overlay_color': 'black',
             'selection_color': 'black',
+            'selection_fill_color': 'white',
             'selection_width': '1',
             'cursor_type': 'tcross'
         }
@@ -133,7 +135,8 @@ class ScreenshotTool:
     def select_area(self):
         def wait_for_esc():
             keyboard.wait('esc')
-            self.selection_win.destroy()
+            if hasattr(self, 'selection_win') and self.selection_win:
+                self.selection_win.destroy()
             self.select_count = 0
 
         threading.Thread(target=wait_for_esc, daemon=True).start()
@@ -143,7 +146,7 @@ class ScreenshotTool:
             self.root.withdraw()
             self.select_count = 1
 
-        # Получаем виртуальный рабочий стол (все мониторы)
+        # Виртуальный рабочий стол (все мониторы)
         user32 = ctypes.windll.user32
         virtual_left = user32.GetSystemMetrics(76)
         virtual_top = user32.GetSystemMetrics(77)
@@ -168,16 +171,18 @@ class ScreenshotTool:
             start_x, start_y = event.x_root, event.y_root
             if rect:
                 canvas.delete(rect)
-            rect = canvas.create_rectangle(start_x - virtual_left, start_y - virtual_top,
-                                           start_x - virtual_left, start_y - virtual_top,
-                                           outline=self.selection_color,
-                                           width=self.selection_width,
-                                           fill='', stipple='gray50')
+            rect = canvas.create_rectangle(
+                start_x - virtual_left, start_y - virtual_top,
+                start_x - virtual_left, start_y - virtual_top,
+                outline=self.selection_color,
+                width=2,
+                fill=self.selection_fill_color,
+                stipple='gray50'
+            )
 
         def on_mouse_move(event):
             nonlocal rect
             if start_x and start_y and rect:
-                # Корректируем координаты относительно виртуального экрана
                 x1 = start_x - virtual_left
                 y1 = start_y - virtual_top
                 x2 = event.x_root - virtual_left
@@ -186,8 +191,10 @@ class ScreenshotTool:
 
         def on_mouse_up(event):
             if start_x and start_y and abs(event.x_root - start_x) > 5:
-                x1, x2 = min(start_x, event.x_root), max(start_x, event.x_root)
-                y1, y2 = min(start_y, event.y_root), max(start_y, event.y_root)
+                x1 = min(start_x, event.x_root)
+                y1 = min(start_y, event.y_root)
+                x2 = max(start_x, event.x_root)
+                y2 = max(start_y, event.y_root)
                 self.selection_win.destroy()
                 self.capture_area(x1, y1, x2, y2)
             else:
@@ -200,11 +207,14 @@ class ScreenshotTool:
 
     def capture_area(self, x1, y1, x2, y2):
         try:
-            cropped = ImageGrab.grab().crop((x1, y1, x2, y2))
+            # Захватываем ВСЕ экраны, затем вырезаем область
+            full = ImageGrab.grab(all_screens=True)
+            cropped = full.crop((x1, y1, x2, y2))
             self.save_screenshot(cropped)
-            self.select_count = 0
         except Exception as e:
-            print(f'Ошибка: {e}')
+            print(f'Ошибка захвата: {e}')
+        finally:
+            self.select_count = 0
 
     def take_screenshot(self):
         if self.select_count == 0:
