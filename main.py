@@ -86,13 +86,13 @@ class ScreenshotTool:
         return os.path.join(os.path.expanduser('~'), 'Documents', 'Screenshots')
 
     def get_unique_filename(self):
-        timestamp = datetime.now().strftime('%Y-%m-%d__%H-%M-%Sxz%f')[:-6]
+        timestamp = datetime.now().strftime('%Y-%m-%d__%H-%M-%S%f')[:-6]
         ext = 'png' if self.image_format == 'PNG' else 'jpg'
         return f'{timestamp}.{ext}'
 
     def save_screenshot(self, image):
         if int(self._save) == 1:
-            full_path = self.screenshot_path + f'/{datetime.now().strftime('%Y-%m-%d')}'
+            full_path = self.screenshot_path + fr'\{datetime.now().strftime('%Y-%m-%d')}'
             filepath = os.path.join(full_path, self.get_unique_filename())
 
             if not os.path.exists(full_path):
@@ -131,7 +131,6 @@ class ScreenshotTool:
             self.save_screenshot(image)
 
     def select_area(self):
-
         def wait_for_esc():
             keyboard.wait('esc')
             self.selection_win.destroy()
@@ -144,8 +143,16 @@ class ScreenshotTool:
             self.root.withdraw()
             self.select_count = 1
 
+        # Получаем виртуальный рабочий стол (все мониторы)
+        user32 = ctypes.windll.user32
+        virtual_left = user32.GetSystemMetrics(76)
+        virtual_top = user32.GetSystemMetrics(77)
+        virtual_width = user32.GetSystemMetrics(78)
+        virtual_height = user32.GetSystemMetrics(79)
+
         self.selection_win = tk.Toplevel(self.root)
-        self.selection_win.attributes('-fullscreen', True)
+        self.selection_win.overrideredirect(True)
+        self.selection_win.geometry(f"{virtual_width}x{virtual_height}+{virtual_left}+{virtual_top}")
         self.selection_win.attributes('-alpha', self.overlay_alpha)
         self.selection_win.configure(bg=self.overlay_color)
         self.selection_win.attributes('-topmost', True)
@@ -161,15 +168,21 @@ class ScreenshotTool:
             start_x, start_y = event.x_root, event.y_root
             if rect:
                 canvas.delete(rect)
-            rect = canvas.create_rectangle(start_x, start_y, start_x, start_y,
+            rect = canvas.create_rectangle(start_x - virtual_left, start_y - virtual_top,
+                                           start_x - virtual_left, start_y - virtual_top,
                                            outline=self.selection_color,
                                            width=self.selection_width,
-                                           fill='white', stipple='gray50')
+                                           fill='', stipple='gray50')
 
         def on_mouse_move(event):
             nonlocal rect
             if start_x and start_y and rect:
-                canvas.coords(rect, start_x, start_y, event.x_root, event.y_root)
+                # Корректируем координаты относительно виртуального экрана
+                x1 = start_x - virtual_left
+                y1 = start_y - virtual_top
+                x2 = event.x_root - virtual_left
+                y2 = event.y_root - virtual_top
+                canvas.coords(rect, x1, y1, x2, y2)
 
         def on_mouse_up(event):
             if start_x and start_y and abs(event.x_root - start_x) > 5:
@@ -179,6 +192,7 @@ class ScreenshotTool:
                 self.capture_area(x1, y1, x2, y2)
             else:
                 self.selection_win.destroy()
+            self.select_count = 0
 
         canvas.bind('<ButtonPress-1>', on_mouse_down)
         canvas.bind('<B1-Motion>', on_mouse_move)
