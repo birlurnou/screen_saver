@@ -57,10 +57,10 @@ class ScreenshotTool:
         self.hotkey = self.config.get('Hotkeys', 'screenshot_hotkey', fallback='print screen')
 
         self.image_format = self.config.get('Quality', 'format', fallback='PNG')
-        self.quality = self.config.getint('Quality', 'quality', fallback=95)
-        self.compression = self.config.getint('Quality', 'compression', fallback=6)
+        self.quality = self.config.getint('Quality', 'quality', fallback=100)
+        self.compression = self.config.getint('Quality', 'compression', fallback=0)
 
-        self.overlay_alpha = self.config.getfloat('Appearance', 'overlay_alpha', fallback=0.2)
+        self.overlay_alpha = self.config.getfloat('Appearance', 'overlay_alpha', fallback=0.4)
         self.overlay_color = self.config.get('Appearance', 'overlay_color', fallback='black')
         self.selection_color = self.config.get('Appearance', 'selection_color', fallback='black')
         self.selection_fill_color = self.config.get('Appearance', 'selection_fill_color', fallback='white')
@@ -87,11 +87,11 @@ class ScreenshotTool:
         }
         self.config['Quality'] = {
             'format': 'PNG',
-            'quality': '95',
-            'compression': '6'
+            'quality': '100',
+            'compression': '0'
         }
         self.config['Appearance'] = {
-            'overlay_alpha': '0.25',
+            'overlay_alpha': '0.4',
             'overlay_color': 'black',
             'selection_color': 'black',
             'selection_fill_color': 'white',
@@ -196,9 +196,8 @@ class ScreenshotTool:
                 start_x - virtual_left, start_y - virtual_top,
                 start_x - virtual_left, start_y - virtual_top,
                 outline=self.selection_color,
-                width=2,
-                fill=self.selection_fill_color,
-                stipple='gray50'
+                width=self.selection_width,
+                fill=self.selection_fill_color
             )
 
         def on_mouse_move(event):
