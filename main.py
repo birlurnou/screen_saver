@@ -25,6 +25,17 @@ class ScreenshotTool:
         self.setup_hotkey()
         self.process_tasks()
         threading.Thread(target=self.health_check, daemon=True).start()
+        threading.Thread(target=self.config_watcher, daemon=True).start()
+
+    def config_watcher(self):
+        last_time = os.path.getmtime(self.config_file) if os.path.exists(self.config_file) else 0
+        while True:
+            time.sleep(3)
+            if os.path.exists(self.config_file):
+                current_time = os.path.getmtime(self.config_file)
+                if current_time != last_time:
+                    self.load_config()
+                    last_time = current_time
 
     def health_check(self):
         while True:
@@ -58,6 +69,12 @@ class ScreenshotTool:
 
         if not os.path.exists(self.screenshot_path):
             os.makedirs(self.screenshot_path)
+
+        try:
+            keyboard.remove_all_hotkeys()
+        except:
+            pass
+        keyboard.add_hotkey(self.hotkey, self.take_screenshot)
 
     def create_default_config(self):
         self.config['Settings'] = {
