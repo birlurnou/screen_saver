@@ -89,7 +89,7 @@ class ScreenshotTool:
         return os.path.join(os.path.expanduser('~'), 'Documents', 'Screenshots')
 
     def get_unique_filename(self):
-        timestamp = datetime.now().strftime('%Y-%m-%d__%H-%M-%S%f')[:-6]
+        timestamp = datetime.now().strftime('%H-%M-%S%f')[:-6] # '%Y-%m-%d_%H-%M-%S%f'
         ext = 'png' if self.image_format == 'PNG' else 'jpg'
         return f'{timestamp}.{ext}'
 
