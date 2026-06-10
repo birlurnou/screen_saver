@@ -89,13 +89,17 @@ class ScreenshotTool:
         return os.path.join(os.path.expanduser('~'), 'Documents', 'Screenshots')
 
     def get_unique_filename(self):
-        timestamp = datetime.now().strftime('%H-%M-%S%f')[:-6] # '%Y-%m-%d_%H-%M-%S%f'
+        timestamp = datetime.now().strftime('%H%M%S%f')[:-6] # '%Y-%m-%d_%H-%M-%S%f'
         ext = 'png' if self.image_format == 'PNG' else 'jpg'
         return f'{timestamp}.{ext}'
 
     def save_screenshot(self, image):
         if int(self._save) == 1:
-            full_path = self.screenshot_path + fr'\{datetime.now().strftime('%Y-%m-%d')}'
+            full_path = (
+                self.screenshot_path
+                + fr'\{datetime.now().strftime('%Y-%m')}'
+                + fr'\{datetime.now().strftime('%Y-%m-%d')}'
+            )
             filepath = os.path.join(full_path, self.get_unique_filename())
 
             if not os.path.exists(full_path):
