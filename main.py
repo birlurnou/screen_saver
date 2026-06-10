@@ -136,10 +136,13 @@ class ScreenshotTool:
 
     def select_area(self):
         def wait_for_esc():
-            keyboard.wait('esc')
-            if hasattr(self, 'selection_win') and self.selection_win:
-                self.selection_win.destroy()
-            self.select_count = 0
+            try:
+                keyboard.wait('esc')
+                if hasattr(self, 'selection_win') and self.selection_win:
+                    self.selection_win.destroy()
+                self.select_count = 0
+            except:
+                pass
 
         threading.Thread(target=wait_for_esc, daemon=True).start()
 
