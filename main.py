@@ -36,13 +36,16 @@ class ScreenshotTool:
                 if current_time != last_time:
                     self.load_config()
                     last_time = current_time
+            else:
+                if not os.path.exists(self.config_file):
+                    self.create_default_config()
 
     def health_check(self):
         while True:
             time.sleep(10)
             with keyboard._pressed_events_lock:
                 if keyboard._pressed_events:
-                    print("Найдены залипшие клавиши, очищаем...")
+                    print("Залипшие клавиши очищены")
                     keyboard._pressed_events.clear()
 
     def load_config(self):
@@ -60,11 +63,14 @@ class ScreenshotTool:
         self.quality = self.config.getint('Quality', 'quality', fallback=100)
         self.compression = self.config.getint('Quality', 'compression', fallback=0)
 
-        self.overlay_alpha = self.config.getfloat('Appearance', 'overlay_alpha', fallback=0.4)
         self.overlay_color = self.config.get('Appearance', 'overlay_color', fallback='black')
-        self.selection_color = self.config.get('Appearance', 'selection_color', fallback='black')
+        self.overlay_alpha = self.config.getfloat('Appearance', 'overlay_alpha', fallback=0.4)
+
+        self.selection_border_color = self.config.get('Appearance', 'selection_border_color', fallback='black')
+        self.selection_border_width = self.config.getint('Appearance', 'selection_border_width', fallback=1)
+
         self.selection_fill_color = self.config.get('Appearance', 'selection_fill_color', fallback='white')
-        self.selection_width = self.config.getint('Appearance', 'selection_width', fallback=1)
+
         self.cursor_type = self.config.get('Appearance', 'cursor_type', fallback='tcross')
 
         if not os.path.exists(self.screenshot_path):
@@ -91,11 +97,11 @@ class ScreenshotTool:
             'compression': '0'
         }
         self.config['Appearance'] = {
-            'overlay_alpha': '0.4',
             'overlay_color': 'black',
-            'selection_color': 'black',
+            'overlay_alpha': '0.4',
+            'selection_border_color': 'black',
+            'selection_border_width': '1',
             'selection_fill_color': 'white',
-            'selection_width': '1',
             'cursor_type': 'tcross'
         }
 
@@ -195,8 +201,8 @@ class ScreenshotTool:
             rect = canvas.create_rectangle(
                 start_x - virtual_left, start_y - virtual_top,
                 start_x - virtual_left, start_y - virtual_top,
-                outline=self.selection_color,
-                width=self.selection_width,
+                outline=self.selection_border_color,
+                width=self.selection_border_width,
                 fill=self.selection_fill_color
             )
 

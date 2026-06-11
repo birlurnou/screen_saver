@@ -15,15 +15,15 @@ screenshot_hotkey = alt+z+x
 
 [Quality]
 format = PNG
-quality = 95
-compression = 6
+quality = 100
+compression = 0
 
 [Appearance]
-overlay_alpha = 0.2
 overlay_color = black
-selection_color = black
+overlay_alpha = 0.4
+selection_border_color = black
+selection_border_width = 1
 selection_fill_color = white
-selection_width = 1
 cursor_type = tcross
 ```
 
