@@ -10,6 +10,8 @@ import ctypes
 import ctypes.wintypes
 from queue import Queue
 import time
+from io import BytesIO
+import win32clipboard
 
 ctypes.windll.user32.SetProcessDPIAware()
 
@@ -162,8 +164,7 @@ class ScreenshotTool:
 
     def copy_to_clipboard(self, image):
         try:
-            from io import BytesIO
-            import win32clipboard
+
 
             output = BytesIO()
             image.save(output, 'BMP')

@@ -111,13 +111,13 @@ JPEG: quality = 70 → плохое качество
 
 ### Установка Модулей
 
-```bash
+```ini
 pip install -r requirements.txt
 ```
 
 ### Параметры для Action в Task Scheduler (для запуска .py)
 
-```bash
+```ini
 C:\Users\{User}\AppData\Local\Programs\Python\Python313\pythonw.exe
 C:\path\to\folder\main.py
 C:\path\to\folder\
@@ -125,7 +125,7 @@ C:\path\to\folder\
 
 ### Параметры для Action в Task Scheduler (для запуска .exe)
 
-```bash
+```ini
 C:\path\to\folder\main.exe
 -
 C:\path\to\folder\
