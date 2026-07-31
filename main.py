@@ -55,6 +55,9 @@ class ScreenshotTool:
         self.config.read(self.config_file, encoding='utf-8')
 
         self.screenshot_path = self.config.get('Settings', 'save_path', fallback=self.get_default_path())
+        self.extension_path = self.config.get('Settings', 'extension_path', fallback='')
+        self.filename_mask = self.config.get('Settings', 'filename_mask', fallback='ymd_hms')
+        self.datetime_structure = self.config.get('Settings', 'datetime_structure', fallback=1)
         self._copy = self.config.get('Settings', 'copy', fallback=1)
         self._save = self.config.get('Settings', 'save', fallback=1)
         self.hotkey = self.config.get('Hotkeys', 'screenshot_hotkey', fallback='print screen')
@@ -85,6 +88,9 @@ class ScreenshotTool:
     def create_default_config(self):
         self.config['Settings'] = {
             'save_path': self.get_default_path(),
+            'extension_path': '',
+            'filename_mask': '_ymd-hMs',
+            'datetime_structure': 1,
             'save': 1,
             'copy': 1
         }
@@ -112,17 +118,31 @@ class ScreenshotTool:
         return os.path.join(os.path.expanduser('~'), 'Documents', 'Screenshots')
 
     def get_unique_filename(self):
-        timestamp = datetime.now().strftime('%H%M%S%f')[:-6] # '%Y-%m-%d_%H-%M-%S%f'
+
+        filename_strftime = ''
+        for l in self.filename:
+            match l:
+                case 'y': filename_strftime += '%Y'
+                case 'm': filename_strftime += '%m'
+                case 'd': filename_strftime += '%d'
+                case 'h': filename_strftime += '%H'
+                case 'M': filename_strftime += '%M'
+                case 's': filename_strftime += '%S%f'
+                case '-': filename_strftime += '-'
+                case '_': filename_strftime += '_'
+
+        timestamp = datetime.now().strftime(filename_strftime)
+        if '%S%f' in filename_strftime:
+            timestamp = timestamp[:-6]
         ext = 'png' if self.image_format == 'PNG' else 'jpg'
         return f'{timestamp}.{ext}'
 
     def save_screenshot(self, image):
         if int(self._save) == 1:
-            full_path = (
-                self.screenshot_path
-                + fr'\{datetime.now().strftime('%Y-%m')}'
-                + fr'\{datetime.now().strftime('%Y-%m-%d')}'
-            )
+            full_path = self.screenshot_path + self.extension_path
+            if int(self.datetime_structure) == 1:
+                full_path += fr'\{datetime.now().strftime('%Y-%m')}' + fr'\{datetime.now().strftime('%Y-%m-%d')}'
+
             filepath = os.path.join(full_path, self.get_unique_filename())
 
             if not os.path.exists(full_path):
@@ -172,7 +192,7 @@ class ScreenshotTool:
         if self.root is None:
             self.root = tk.Tk()
             self.root.withdraw()
-            self.select_count = 1
+            self.select_count += 1
 
         user32 = ctypes.windll.user32
         virtual_left = user32.GetSystemMetrics(76)
@@ -266,6 +286,7 @@ class ScreenshotTool:
             self.select_count = 0
 
     def take_screenshot(self):
+        print(self.select_count)
         if self.select_count == 0:
             self.task_queue.put(self.select_area)
             self.select_count += 1
