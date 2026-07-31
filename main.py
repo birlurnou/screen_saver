@@ -120,7 +120,7 @@ class ScreenshotTool:
     def get_unique_filename(self):
 
         filename_strftime = ''
-        for l in self.filename:
+        for l in self.filename_mask:
             match l:
                 case 'y': filename_strftime += '%Y'
                 case 'm': filename_strftime += '%m'
