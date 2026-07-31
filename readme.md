@@ -115,7 +115,7 @@ JPEG: quality = 70 → плохое качество
 pip install -r requirements.txt
 ```
 
-### Параметры для Task Scheduler (для запуска .py)
+### Параметры для Action в Task Scheduler (для запуска .py)
 
 ```bash
 C:\Users\{User}\AppData\Local\Programs\Python\Python313\pythonw.exe
@@ -123,10 +123,10 @@ C:\path\to\folder\main.py
 C:\path\to\folder\
 ```
 
-### Параметры для Task Scheduler (для запуска .exe)
+### Параметры для Action в Task Scheduler (для запуска .exe)
 
 ```bash
-D:\_data\1_scripts\1_py\screen_saver\main.exe
+C:\path\to\folder\main.exe
 -
-D:\_data\1_scripts\1_py\screen_saver\
+C:\path\to\folder\
 ```
